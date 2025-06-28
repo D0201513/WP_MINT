@@ -4,12 +4,11 @@
   gather_facts: false
 
   vars:
-    wallpaper_src: "WALLPAPER-MINT.jpg"
+    wallpaper_src: "Avengers.png"
     wallpaper_dst: "/usr/share/backgrounds/mint-wallpaper.jpg"
     cinnamon_schema: "org.cinnamon.desktop.background"
 
   tasks:
-
     - name: Copy wallpaper to /usr/share/backgrounds
       copy:
         src: "{{ wallpaper_src }}"
@@ -47,7 +46,7 @@
 
     - name: Ensure /etc/dconf/profile directory exists
       file:
-        path: "/etc/dconf/profile"
+        path: /etc/dconf/profile
         state: directory
         mode: '0755'
 
@@ -61,11 +60,14 @@
     - name: Update dconf database
       command: dconf update
 
-    - name: Reload Cinnamon session for active user
+    - name: Reload Cinnamon session for active user (optional, may not be needed)
       ignore_errors: yes
       shell: |
         active_user=$(logname)
-        pgrep -u "$active_user" cinnamon | while read pid; do
-          echo "Reloading Cinnamon session PID $pid for user $active_user"
+        pid=$(pgrep -u "$active_user" cinnamon | head -n1 || true)
+        if [ -n "$pid" ]; then
+          echo "Reloading Cinnamon for $active_user (PID $pid)"
           kill -HUP "$pid"
-        done
+        else
+          echo "No Cinnamon session found — please log out and log back in."
+        fi
