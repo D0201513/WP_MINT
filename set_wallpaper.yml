@@ -4,7 +4,7 @@
   gather_facts: false
 
   vars:
-    wallpaper_src: "Deaktop-wall.jpg"
+    wallpaper_src: "Desktop-wall.jpg"
     wallpaper_dst: "/usr/share/backgrounds/mint-wallpaper.jpg"
     cinnamon_schema: "org.cinnamon.desktop.background"
 
