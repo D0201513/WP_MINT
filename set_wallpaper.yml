@@ -45,6 +45,12 @@
           /{{ cinnamon_schema }}/picture-uri
           /{{ cinnamon_schema }}/picture-options
 
+    - name: Ensure /etc/dconf/profile directory exists
+      file:
+        path: "/etc/dconf/profile"
+        state: directory
+        mode: '0755'
+
     - name: Ensure dconf profile exists
       copy:
         dest: /etc/dconf/profile/user
