@@ -1,0 +1,68 @@
+- name: Set Wallpaper for All Users (Linux Mint Cinnamon)
+  hosts: mint
+  become: yes
+  gather_facts: false
+
+  vars:
+    wallpaper_src: "WALLPAPER-MINT.jpg"
+    wallpaper_dst: "/usr/share/backgrounds/mint-wallpaper.jpg"
+    cinnamon_schema: "org.cinnamon.desktop.background"
+
+  tasks:
+
+    - name: Copy wallpaper to /usr/share/backgrounds
+      copy:
+        src: "{{ wallpaper_src }}"
+        dest: "{{ wallpaper_dst }}"
+        mode: '0644'
+        owner: root
+        group: root
+
+    - name: Create dconf config directory
+      file:
+        path: "/etc/dconf/db/local.d"
+        state: directory
+        mode: '0755'
+
+    - name: Create dconf lock directory
+      file:
+        path: "/etc/dconf/db/local.d/locks"
+        state: directory
+        mode: '0755'
+
+    - name: Set system-wide Cinnamon wallpaper via dconf
+      copy:
+        dest: "/etc/dconf/db/local.d/00-cinnamon-wallpaper"
+        content: |
+          [{{ cinnamon_schema }}]
+          picture-uri='file://{{ wallpaper_dst }}'
+          picture-options='zoom'
+
+    - name: Lock wallpaper so users cannot change it
+      copy:
+        dest: "/etc/dconf/db/local.d/locks/cinnamon-background"
+        content: |
+          /{{ cinnamon_schema }}/picture-uri
+          /{{ cinnamon_schema }}/picture-options
+
+    - name: Ensure dconf profile exists
+      copy:
+        dest: /etc/dconf/profile/user
+        content: |
+          user-db:user
+          system-db:local
+
+    - name: Update dconf database
+      command: dconf update
+
+    - name: Reload Cinnamon session for active user
+      ignore_errors: yes
+      shell: |
+        active_user=$(logname)
+        pid=$(pgrep -u "$active_user" cinnamon || true)
+        if [ -n "$pid" ]; then
+          echo "Reloading Cinnamon session for user $active_user"
+          kill -HUP "$pid"
+        else
+          echo "No Cinnamon session running — please log out and log back in."
+        fi
