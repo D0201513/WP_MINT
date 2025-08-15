@@ -1,0 +1,66 @@
+---
+- name: Set and Lock Wallpaper for All Users (Linux Mint Cinnamon)
+  hosts: all
+  become: yes
+  gather_facts: false
+
+  tasks:
+
+    - name: Copy wallpaper to /usr/share/backgrounds
+      copy:
+        src: "guts.jpg"  # Must be in playbook dir or files/
+        dest: "/usr/share/backgrounds/guts.jpg"
+        mode: '0644'
+
+    - name: Set permissions so only root can change wallpaper file
+      file:
+        path: /usr/share/backgrounds/guts.jpg
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Create dconf config directory
+      file:
+        path: "/etc/dconf/db/local.d"
+        state: directory
+        mode: '0755'
+
+    - name: Create dconf lock directory
+      file:
+        path: "/etc/dconf/db/local.d/locks"
+        state: directory
+        mode: '0755'
+
+    - name: Set system-wide default wallpaper for Cinnamon
+      copy:
+        dest: "/etc/dconf/db/local.d/00-wallpaper"
+        content: |
+          [org/cinnamon/desktop/background]
+          picture-uri='file:///usr/share/backgrounds/guts.jpg'
+          picture-options='zoom'
+
+    - name: Lock wallpaper settings so users cannot change them (Cinnamon)
+      copy:
+        dest: "/etc/dconf/db/local.d/locks/desktop-background"
+        content: |
+          /org/cinnamon/desktop/background/picture-uri
+          /org/cinnamon/desktop/background/picture-options
+
+    - name: Ensure dconf profile exists
+      copy:
+        dest: /etc/dconf/profile/user
+        content: |
+          user-db:user
+          system-db:local
+
+    - name: Update dconf database
+      command: dconf update
+
+    - name: Notify user that wallpaper will apply on next login
+      shell: |
+        active_user=$(logname)
+        export DISPLAY=:0
+        sudo -u "$active_user" \
+        DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u $active_user)/bus" \
+        notify-send "Wallpaper Applied" "New wallpaper will be visible after your next login."
+      ignore_errors: yes
