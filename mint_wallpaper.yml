@@ -1,20 +1,20 @@
 ---
 - name: Set and Lock Wallpaper for All Users (Linux Mint Cinnamon)
-  hosts: all
-  become: yes
+  hosts: 10.17.12.40
+  become: no
   gather_facts: false
 
   tasks:
 
     - name: Copy wallpaper to /usr/share/backgrounds
       copy:
-        src: "guts.jpg"  # Must be in playbook dir or files/
-        dest: "/usr/share/backgrounds/guts.jpg"
+        src: "aravind_wp.jpg"  # Must be in playbook dir or files/
+        dest: "/usr/share/backgrounds/aravind_wp.jpg"
         mode: '0644'
 
     - name: Set permissions so only root can change wallpaper file
       file:
-        path: /usr/share/backgrounds/guts.jpg
+        path: /usr/share/backgrounds/aravind_wp.jpg
         owner: root
         group: root
         mode: '0644'
@@ -36,7 +36,7 @@
         dest: "/etc/dconf/db/local.d/00-wallpaper"
         content: |
           [org/cinnamon/desktop/background]
-          picture-uri='file:///usr/share/backgrounds/guts.jpg'
+          picture-uri='file:///usr/share/backgrounds/aravind_wp.jpg'
           picture-options='zoom'
 
     - name: Lock wallpaper settings so users cannot change them (Cinnamon)
