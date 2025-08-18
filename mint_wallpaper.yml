@@ -31,6 +31,14 @@
         state: directory
         mode: '0755'
 
+    - name: Ensure /etc/dconf/profile directory exists   # 🔥 FIXED
+      file:
+        path: "/etc/dconf/profile"
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
     - name: Set system-wide default wallpaper for Cinnamon
       copy:
         dest: "/etc/dconf/db/local.d/00-wallpaper"
