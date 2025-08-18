@@ -1,6 +1,6 @@
 ---
 - name: Set and Lock Wallpaper for All Users (Linux Mint Cinnamon)
-  hosts: 10.17.11.17
+  hosts: 10.17.12.40
   become: yes
   gather_facts: false
 
