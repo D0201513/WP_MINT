@@ -1,6 +1,6 @@
 ---
 - name: Set and Lock Wallpaper for All Users (Linux Mint Cinnamon)
-  hosts: Madurai-OP
+  hosts: MDU-OP2
   become: yes
   gather_facts: false
 
