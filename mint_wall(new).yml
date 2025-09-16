@@ -1,8 +1,11 @@
 ---
-- name: Set and Lock Wallpaper for All Users (Linux Mint Cinnamon)
+- name: Set and Lock Wallpaper for All Users (Linux Mint Cinnamon & GNOME)
   hosts: MDU-OP2
   become: yes
-  gather_facts: false
+  gather_facts: true   # required to detect desktop environment
+
+  vars:
+    desktop_schema: "{{ 'org.cinnamon.desktop.background' if ansible_facts['env']['XDG_CURRENT_DESKTOP'] is defined and 'Cinnamon' in ansible_facts['env']['XDG_CURRENT_DESKTOP'] else 'org.gnome.desktop.background' }}"
 
   tasks:
 
@@ -16,7 +19,7 @@
 
     - name: Copy wallpaper to /usr/share/mywallpapers/Test.jpg
       copy:
-        src: "Desktop_Wallpaper_Week_15.jpg"   # must be in playbook dir or files/
+        src: "Desktop_Wallpaper_Week_15.jpg"
         dest: "/usr/share/mywallpapers/Test.jpg"
         owner: root
         group: root
@@ -49,20 +52,20 @@
         group: root
         mode: '0755'
 
-    - name: Set system-wide default wallpaper for Cinnamon
+    - name: Set system-wide default wallpaper
       copy:
         dest: "/etc/dconf/db/local.d/00-wallpaper"
         content: |
-          [org/cinnamon/desktop/background]
+          [{{ desktop_schema | replace('.', '/') }}]
           picture-uri='file:///usr/share/mywallpapers/Test.jpg'
           picture-options='zoom'
 
-    - name: Lock wallpaper settings so users cannot change them (Cinnamon)
+    - name: Lock wallpaper settings so users cannot change them
       copy:
         dest: "/etc/dconf/db/local.d/locks/desktop-background"
         content: |
-          /org/cinnamon/desktop/background/picture-uri
-          /org/cinnamon/desktop/background/picture-options
+          /{{ desktop_schema | replace('.', '/') }}/picture-uri
+          /{{ desktop_schema | replace('.', '/') }}/picture-options
 
     - name: Ensure dconf profile exists
       copy:
@@ -81,9 +84,9 @@
           export DISPLAY=:0
           sudo -u "$user" \
           DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$uid/bus" \
-          gsettings set org.cinnamon.desktop.background picture-uri 'file:///usr/share/mywallpapers/Test.jpg'
+          gsettings set {{ desktop_schema }} picture-uri 'file:///usr/share/mywallpapers/Test.jpg'
           sudo -u "$user" \
           DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$uid/bus" \
-          gsettings set org.cinnamon.desktop.background picture-options 'zoom'
+          gsettings set {{ desktop_schema }} picture-options 'zoom'
         done
       ignore_errors: yes
